@@ -3,7 +3,6 @@ import { NextResponse } from 'next/server';
 
 import { getCacheTime, getConfig } from '@/lib/config';
 import { fetchDoubanWithVerification } from '@/lib/douban-anti-crawler';
-import { bypassDoubanChallenge } from '@/lib/puppeteer';
 import { getRandomUserAgent, getRandomUserAgentWithInfo, getSecChUaHeaders } from '@/lib/user-agent';
 import { recordRequest } from '@/lib/performance-monitor';
 
@@ -482,28 +481,11 @@ async function _scrapeDoubanDetails(id: string, retryCount = 0): Promise<any> {
       const enablePuppeteer = config.DoubanConfig?.enablePuppeteer ?? false;
 
       if (enablePuppeteer) {
-        console.log(`[Douban] Puppeteer 已启用，尝试绕过 Challenge...`);
+        console.log(`[Douban] Puppeteer 在 Cloudflare Workers 上不可用，使用 Mobile API fallback...`);
         try {
-          // 尝试使用 Puppeteer 绕过 Challenge
-          const puppeteerResult = await bypassDoubanChallenge(target);
-          html = puppeteerResult.html;
-
-          // 再次检测是否成功绕过
-          if (isDoubanChallengePage(html)) {
-            console.log(`[Douban] Puppeteer 绕过失败，使用 Mobile API fallback...`);
-            return await fetchFromMobileAPI(id);
-          }
-
-          console.log(`[Douban] ✅ Puppeteer 成功绕过 Challenge`);
-          // 继续使用 Puppeteer 获取的 HTML 进行解析
-        } catch (puppeteerError) {
-          console.error(`[Douban] Puppeteer 执行失败:`, puppeteerError);
-          console.log(`[Douban] 使用 Mobile API fallback...`);
-          try {
-            return await fetchFromMobileAPI(id);
-          } catch (mobileError) {
-            throw new DoubanError('豆瓣反爬虫激活，Puppeteer 和 Mobile API 均不可用', 'RATE_LIMIT', 429);
-          }
+          return await fetchFromMobileAPI(id);
+        } catch (mobileError) {
+          throw new DoubanError('豆瓣反爬虫激活，Puppeteer 在当前环境不可用且 Mobile API 失败', 'RATE_LIMIT', 429);
         }
       } else {
         // Puppeteer 未启用，直接使用 Mobile API
