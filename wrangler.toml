@@ -1,11 +1,8 @@
 name = "lunatv"
 compatibility_date = "2024-09-23"
-compatibility_flags = ["nodejs_compat", "nodejs_compat_v2"]
+compatibility_flags = ["nodejs_compat"]
 main = ".open-next/worker.js"
 minify = true
-
-# Node.js 兼容性
-node_compat = true
 
 # 静态资源配置
 # Cloudflare Workers Assets 用于服务静态文件
