@@ -213,7 +213,7 @@ function generateTrustedAuthCookie(request: NextRequest): NextResponse {
   return response;
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 处理 /adult/ 路径前缀，重写为实际 API 路径
