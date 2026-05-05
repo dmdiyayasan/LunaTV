@@ -477,16 +477,20 @@ your-space/
 > - 仅用于学习测试，不要用于生产环境或公开服务
 > - 优先考虑自托管（Docker）或其他平台（Render、VPS）
 > - 使用 Cloudflare 部署即表示您已知晓并自愿承担所有风险
-> 
-> 💡 **两种部署方式**：
-> - **Cloudflare Pages**：网页界面操作，类似 Vercel（推荐新手）
-> - **Cloudflare Workers + CLI**：命令行部署，更灵活
 
 ---
 
-#### 方式一：Cloudflare Pages 部署（推荐）
+#### 部署方式
 
-**类似 Vercel 的网页界面操作，最简单！**
+**方式一：一键部署按钮（最简单）**
+
+点击上方的 **Deploy to Cloudflare Workers** 按钮，系统会自动：
+1. Fork 仓库到你的 GitHub 账号
+2. 连接到 Cloudflare
+3. 配置环境变量
+4. 自动部署
+
+**方式二：Dashboard 网页界面部署**
 
 1. **准备工作**
    - 注册 [Cloudflare](https://dash.cloudflare.com/) 账号
@@ -496,20 +500,25 @@ your-space/
 2. **连接 GitHub 仓库**
    - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
    - 进入 **Workers & Pages**
-   - 点击 **Create application** > **Pages** > **Connect to Git**
+   - 点击 **Create application** > **Workers** > **Connect to Git**
    - 授权 Cloudflare 访问你的 GitHub 账号
    - 选择你 Fork 的 LunaTV 仓库
 
 3. **配置构建设置**
-   - **Project name**：`lunatv`（自定义）
-   - **Production branch**：`main`
-   - **Framework preset**：`Next.js`
+
+   在 **Settings** > **Builds** 中配置：
+
+   **Git Settings:**
+   - **Branch**：`main`（或选择 `dev` 用于测试）
+
+   **Build Configuration:**
    - **Build command**：`pnpm build:cloudflare`
-   - **Build output directory**：`.open-next/assets`
+   - **Deploy command**：`npx wrangler deploy`（默认）
+   - **Root directory (Path)**：留空（项目根目录）
 
 4. **配置环境变量**
 
-   在 **Environment variables** 中添加：
+   在 **Settings** > **Variables and Secrets** 中添加：
 
    ```env
    # 必填：管理员账号
@@ -525,30 +534,20 @@ your-space/
    DISABLE_HERO_TRAILER=true
 
    # 可选：站点配置
-   SITE_BASE=https://your-project.pages.dev
+   SITE_BASE=https://your-worker.workers.dev
    NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
    ```
 
 5. **开始部署**
    - 点击 **Save and Deploy**
    - 等待构建完成（首次约 3-5 分钟）
-   - 部署成功后会分配 `xxx.pages.dev` 域名
+   - 部署成功后会分配 `xxx.workers.dev` 域名
 
 6. **后续更新**
    - 推送代码到 GitHub 会自动触发重新部署
    - 也可以在 Cloudflare Dashboard 手动触发部署
 
-7. **绑定自定义域名（可选）**
-   - 在项目页面点击 **Custom domains**
-   - 添加你的域名（需要域名托管在 Cloudflare）
-
----
-
-#### 方式二：Cloudflare Workers + CLI 部署
-
-**适合熟悉命令行的用户**
-
-##### 本地部署步骤
+**方式三：使用 Wrangler CLI 部署**
 
 1. **准备工作**
    - 注册 [Cloudflare](https://dash.cloudflare.com/) 账号
@@ -611,7 +610,7 @@ your-space/
    pnpm deploy:cloudflare
    ```
 
-##### GitHub Actions 自动部署
+**方式二：使用 GitHub Actions 自动部署**
 
 4. **使用 GitHub Actions 自动部署**
 
@@ -662,9 +661,9 @@ your-space/
 
 ---
 
-#### 环境变量说明
+#### 部署后配置
 
-5. **配置环境变量说明**
+5. **绑定自定义域名（可选）**
 
    必需配置：
 
@@ -691,19 +690,7 @@ your-space/
    - 点击 "Triggers" > "Custom Domains"
    - 添加自定义域名（需要域名托管在 Cloudflare）
 
-#### ✨ Cloudflare 部署优势
-
-**Cloudflare Pages vs Workers：**
-
-| 特性 | Cloudflare Pages | Cloudflare Workers + CLI |
-|-----|-----------------|------------------------|
-| **部署方式** | 网页界面操作 | 命令行/GitHub Actions |
-| **难度** | ⭐ 简单（类似 Vercel） | ⭐⭐ 中等 |
-| **Git 集成** | ✅ 自动部署 | ✅ 需配置 Actions |
-| **预览部署** | ✅ 每个 PR 自动预览 | ❌ 需手动配置 |
-| **适合人群** | 新手、快速部署 | 开发者、自定义需求 |
-
-**共同优势：**
+#### ✨ Cloudflare Workers 优势
 
 - ✅ **完全免费**：每天 100,000 次请求（足够个人使用）
 - ✅ **边缘计算**：全球 300+ 数据中心，访问速度极快
@@ -719,7 +706,7 @@ your-space/
 - ⚠️ **CPU 时间限制**：免费版 10ms，复杂计算可能超时
 
 > 💡 **选择建议**：
-> - **Cloudflare**：适合轻量级使用、全球访问、不需要视频缓存
+> - **Cloudflare Workers**：适合轻量级使用、全球访问、不需要视频缓存
 > - **Docker/Render**：需要完整功能（视频缓存、长时间任务）
 > - **Vercel**：介于两者之间，有 60 秒函数执行时间但无文件系统
 
