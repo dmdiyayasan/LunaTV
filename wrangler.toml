@@ -14,3 +14,4 @@ binding = "ASSETS"
 [vars]
 NODE_ENV = "production"
 BUILD_TARGET = "cloudflare"
+NEXT_PUBLIC_BUILD_TARGET = "cloudflare"

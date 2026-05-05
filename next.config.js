@@ -11,10 +11,12 @@ const nextConfig = {
   reactStrictMode: false,
 
   // 排除大型包不进行 bundle
+  // Cloudflare: websr 太大（11MB），排除以减小 Worker 大小
   // Vercel: Puppeteer/Chromium 用于 serverless
   serverExternalPackages: [
     '@sparticuz/chromium',
     'puppeteer-core',
+    ...(isCloudflare ? ['@websr/websr'] : []),
   ],
 
   // Next.js 16 使用 Turbopack，配置 SVG 加载

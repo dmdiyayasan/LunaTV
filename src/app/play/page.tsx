@@ -328,9 +328,11 @@ function PlayPageClient() {
 
 
   // WebSR超分相关状态
+  // 检测是否为 Cloudflare 环境（通过环境变量）
+  const isCloudflare = process.env.NEXT_PUBLIC_BUILD_TARGET === 'cloudflare' || process.env.BUILD_TARGET === 'cloudflare';
   const [webGPUSupported, setWebGPUSupported] = useState<boolean>(false);
   const [websrEnabled, setWebsrEnabled] = useState<boolean>(() => {
-    if (typeof window !== 'undefined') {
+    if (typeof window !== 'undefined' && !isCloudflare) {
       return localStorage.getItem('websr_enabled') === 'true';
     }
     return false;
@@ -2397,6 +2399,12 @@ function PlayPageClient() {
 
   // 初始化Anime4K超分
   const initWebSR = async () => {
+    // Cloudflare 环境不支持 WebSR
+    if (isCloudflare) {
+      console.warn('WebSR is not available in Cloudflare environment');
+      return;
+    }
+
     if (!artPlayerRef.current?.video) return;
 
     try {
@@ -4696,7 +4704,7 @@ function PlayPageClient() {
               return `${Math.round(opacity * 100)}%`;
             },
           },
-          ...(webGPUSupported ? [
+          ...(!isCloudflare && webGPUSupported ? [
             {
               name: '超分设置',
               html: '超分设置',
