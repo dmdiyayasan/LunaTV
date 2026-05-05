@@ -19,6 +19,19 @@ const nextConfig = {
     ...(isCloudflare ? ['@websr/websr'] : []),
   ],
 
+  // Cloudflare 环境：排除客户端的 websr
+  webpack: (config, { isServer }) => {
+    if (isCloudflare && !isServer) {
+      config.externals = config.externals || [];
+      if (Array.isArray(config.externals)) {
+        config.externals.push('@websr/websr');
+      } else {
+        config.externals = [config.externals, '@websr/websr'];
+      }
+    }
+    return config;
+  },
+
   // Next.js 16 使用 Turbopack，配置 SVG 加载
   turbopack: {
     root: __dirname,
