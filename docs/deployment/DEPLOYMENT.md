@@ -458,6 +458,320 @@ your-space/
 
 ---
 
+### ☁️ Cloudflare Workers 部署（免费 + 边缘计算）
+
+[Cloudflare Workers](https://workers.cloudflare.com/) 提供免费的边缘计算服务，全球 300+ 数据中心，访问速度极快。
+
+[![Deploy to Cloudflare Workers](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/SzeMeng76/LunaTV)
+
+> ⚠️ **重要风险警告**：
+> 
+> 本项目涉及影视内容聚合，部署到 Cloudflare 可能存在以下风险：
+> - **账号封禁风险**：Cloudflare 可能因版权投诉或违反服务条款而封禁账号
+> - **法律责任**：使用者需自行承担因部署本项目产生的所有法律责任
+> - **服务中断**：Cloudflare 可能随时暂停或终止服务，不提前通知
+> 
+> **已知案例**：有用户因部署类似影视聚合项目被 Cloudflare 封号。
+> 
+> **建议**：
+> - 仅用于学习测试，不要用于生产环境或公开服务
+> - 优先考虑自托管（Docker）或其他平台（Render、VPS）
+> - 使用 Cloudflare 部署即表示您已知晓并自愿承担所有风险
+> 
+> 💡 **两种部署方式**：
+> - **Cloudflare Pages**：网页界面操作，类似 Vercel（推荐新手）
+> - **Cloudflare Workers + CLI**：命令行部署，更灵活
+
+---
+
+#### 方式一：Cloudflare Pages 部署（推荐）
+
+**类似 Vercel 的网页界面操作，最简单！**
+
+1. **准备工作**
+   - 注册 [Cloudflare](https://dash.cloudflare.com/) 账号
+   - 在 [Upstash](https://upstash.com/) 创建 Redis 实例
+   - Fork 本项目到你的 GitHub 账号
+
+2. **连接 GitHub 仓库**
+   - 登录 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 进入 **Workers & Pages**
+   - 点击 **Create application** > **Pages** > **Connect to Git**
+   - 授权 Cloudflare 访问你的 GitHub 账号
+   - 选择你 Fork 的 LunaTV 仓库
+
+3. **配置构建设置**
+   - **Project name**：`lunatv`（自定义）
+   - **Production branch**：`main`
+   - **Framework preset**：`Next.js`
+   - **Build command**：`pnpm build:cloudflare`
+   - **Build output directory**：`.open-next/assets`
+
+4. **配置环境变量**
+
+   在 **Environment variables** 中添加：
+
+   ```env
+   # 必填：管理员账号
+   USERNAME=admin
+   PASSWORD=your_secure_password
+
+   # 必填：存储配置（必须使用 Upstash）
+   NEXT_PUBLIC_STORAGE_TYPE=upstash
+   UPSTASH_URL=https://your-redis-instance.upstash.io
+   UPSTASH_TOKEN=AxxxxxxxxxxxxxxxxxxxxxxxxxxxQ==
+
+   # 推荐：禁用首页预告片
+   DISABLE_HERO_TRAILER=true
+
+   # 可选：站点配置
+   SITE_BASE=https://your-project.pages.dev
+   NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
+   ```
+
+5. **开始部署**
+   - 点击 **Save and Deploy**
+   - 等待构建完成（首次约 3-5 分钟）
+   - 部署成功后会分配 `xxx.pages.dev` 域名
+
+6. **后续更新**
+   - 推送代码到 GitHub 会自动触发重新部署
+   - 也可以在 Cloudflare Dashboard 手动触发部署
+
+7. **绑定自定义域名（可选）**
+   - 在项目页面点击 **Custom domains**
+   - 添加你的域名（需要域名托管在 Cloudflare）
+
+---
+
+#### 方式二：Cloudflare Workers + CLI 部署
+
+**适合熟悉命令行的用户**
+
+##### 本地部署步骤
+
+1. **准备工作**
+   - 注册 [Cloudflare](https://dash.cloudflare.com/) 账号
+   - 在 [Upstash](https://upstash.com/) 创建 Redis 实例
+   - Fork 本项目到你的 GitHub 账号
+
+2. **本地构建测试（可选）**
+
+   ```bash
+   # 安装依赖
+   pnpm install
+   
+   # 构建 Cloudflare 版本
+   pnpm build:cloudflare
+   
+   # 本地预览
+   pnpm preview:cloudflare
+   ```
+
+3. **使用 Wrangler CLI 部署**
+
+   a. 登录 Cloudflare
+   ```bash
+   npx wrangler login
+   ```
+
+   b. 配置 `wrangler.toml`（已包含在项目中）
+   ```toml
+   name = "lunatv"  # 修改为你的项目名
+   compatibility_date = "2024-09-23"
+   compatibility_flags = ["nodejs_compat"]
+   main = ".open-next/worker.js"
+   minify = true
+   
+   [assets]
+   directory = ".open-next/assets"
+   binding = "ASSETS"
+   
+   [vars]
+   NODE_ENV = "production"
+   BUILD_TARGET = "cloudflare"
+   ```
+
+   c. 配置环境变量（Secrets）
+   ```bash
+   # 设置 Upstash Redis
+   npx wrangler secret put UPSTASH_URL
+   npx wrangler secret put UPSTASH_TOKEN
+   
+   # 设置用户认证
+   npx wrangler secret put USERNAME
+   npx wrangler secret put PASSWORD
+   
+   # 可选：其他环境变量
+   npx wrangler secret put TMDB_API_KEY
+   ```
+
+   d. 部署
+   ```bash
+   pnpm deploy:cloudflare
+   ```
+
+##### GitHub Actions 自动部署
+
+4. **使用 GitHub Actions 自动部署**
+
+   a. 获取 Cloudflare 凭证
+   - 访问 [Cloudflare Dashboard](https://dash.cloudflare.com/)
+   - 点击右上角头像 > My Profile > API Tokens
+   - 点击 "Create Token"，选择 "Edit Cloudflare Workers" 模板
+   - 复制生成的 **API Token**
+   - 在 Dashboard 首页右侧可以看到你的 **Account ID**
+
+   b. 配置 GitHub Secrets
+   
+   进入你的 GitHub 仓库，Settings > Secrets and variables > Actions > New repository secret，添加以下 Secrets：
+
+   **必需配置：**
+
+   | Secret 名称 | 说明 | 示例值 |
+   |------------|------|--------|
+   | `CLOUDFLARE_API_TOKEN` | Cloudflare API Token | `your_api_token_here` |
+   | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID | `abc123def456` |
+   | `UPSTASH_URL` | Upstash Redis URL | `https://xxx.upstash.io` |
+   | `UPSTASH_TOKEN` | Upstash Redis Token | `AxxxQ==` |
+   | `USERNAME` | 管理员账号 | `admin` |
+   | `PASSWORD` | 管理员密码 | `your_password` |
+
+   **可选配置：**
+
+   | Secret 名称 | 说明 |
+   |------------|------|
+   | `TMDB_API_KEY` | TMDB API 密钥 |
+   | `SITE_BASE` | 站点基础 URL |
+   | `NEXT_PUBLIC_SITE_NAME` | 站点名称 |
+   | `DISABLE_HERO_TRAILER` | 禁用首页预告片（推荐设为 `true`）|
+
+   c. 推送代码触发自动部署
+   
+   项目已包含 `.github/workflows/deploy-cloudflare.yml` 工作流，推送到 `main` 分支会自动触发部署：
+
+   ```bash
+   git add .
+   git commit -m "Deploy to Cloudflare"
+   git push origin main
+   ```
+
+   也可以在 GitHub 仓库的 Actions 标签页手动触发部署。
+
+   > 💡 **观影房配置**：观影房服务器地址和认证密钥在部署后通过**管理面板 > 观影房配置**设置，无需环境变量。
+
+---
+
+#### 环境变量说明
+
+5. **配置环境变量说明**
+
+   必需配置：
+
+   ```env
+   # 必填：管理员账号
+   USERNAME=admin
+   PASSWORD=your_secure_password
+
+   # 必填：存储配置（必须使用 Upstash）
+   NEXT_PUBLIC_STORAGE_TYPE=upstash
+   UPSTASH_URL=https://your-redis-instance.upstash.io
+   UPSTASH_TOKEN=AxxxxxxxxxxxxxxxxxxxxxxxxxxxQ==
+
+   # 推荐：禁用首页预告片
+   DISABLE_HERO_TRAILER=true
+
+   # 可选：站点配置
+   SITE_BASE=https://your-worker.workers.dev
+   NEXT_PUBLIC_SITE_NAME=LunaTV Enhanced
+   ```
+
+6. **绑定自定义域名（可选）**
+   - 在 Cloudflare Workers 控制台选择你的 Worker
+   - 点击 "Triggers" > "Custom Domains"
+   - 添加自定义域名（需要域名托管在 Cloudflare）
+
+#### ✨ Cloudflare 部署优势
+
+**Cloudflare Pages vs Workers：**
+
+| 特性 | Cloudflare Pages | Cloudflare Workers + CLI |
+|-----|-----------------|------------------------|
+| **部署方式** | 网页界面操作 | 命令行/GitHub Actions |
+| **难度** | ⭐ 简单（类似 Vercel） | ⭐⭐ 中等 |
+| **Git 集成** | ✅ 自动部署 | ✅ 需配置 Actions |
+| **预览部署** | ✅ 每个 PR 自动预览 | ❌ 需手动配置 |
+| **适合人群** | 新手、快速部署 | 开发者、自定义需求 |
+
+**共同优势：**
+
+- ✅ **完全免费**：每天 100,000 次请求（足够个人使用）
+- ✅ **边缘计算**：全球 300+ 数据中心，访问速度极快
+- ✅ **自动 HTTPS**：免费 SSL 证书
+- ✅ **无冷启动**：Workers 始终保持热启动状态
+- ✅ **国内访问友好**：边缘节点覆盖全球，包括中国大陆
+- ✅ **自定义域名**：支持绑定自己的域名
+
+**功能限制：**
+
+- ❌ **无视频缓存**：无法缓存豆瓣预告片等视频文件
+- ❌ **无本地文件系统**：所有数据必须存储在外部数据库
+- ⚠️ **CPU 时间限制**：免费版 10ms，复杂计算可能超时
+
+> 💡 **选择建议**：
+> - **Cloudflare**：适合轻量级使用、全球访问、不需要视频缓存
+> - **Docker/Render**：需要完整功能（视频缓存、长时间任务）
+> - **Vercel**：介于两者之间，有 60 秒函数执行时间但无文件系统
+
+#### ⚠️ Cloudflare 注意事项
+
+- **必须使用 Upstash**：Workers 无持久化存储，需要外部数据库
+- **不支持观影房内置服务器**：需要使用外部观影房服务器（见 [观影房部署文档](./WATCH_ROOM_DEPLOYMENT.md)）
+- **不支持 Puppeteer**：Workers 不支持浏览器自动化（项目已禁用）
+- **❌ 不支持视频缓存功能**：Cloudflare Workers 无本地文件系统，无法缓存视频文件到磁盘
+  - 影响功能：豆瓣预告片缓存、视频代理缓存
+  - 替代方案：视频直接从源站播放（不影响正常观看）
+- **函数执行限制**：免费版 CPU 时间限制 10ms，付费版 50ms
+- **请求大小限制**：请求体最大 100MB
+
+> 💡 **推荐场景**：
+> - ✅ **适合**：轻量级使用、全球用户访问、不需要视频缓存
+> - ❌ **不适合**：需要视频缓存、大量视频代理、长时间 CPU 密集任务
+> - 🔄 **替代方案**：如需完整功能（包括视频缓存），推荐使用 Docker 自托管或 Render 部署
+
+#### 🔧 故障排查
+
+**构建失败**
+```bash
+# 清理缓存重新构建
+rm -rf .next .open-next
+pnpm build:cloudflare
+```
+
+**部署失败**
+```bash
+# 检查 wrangler 配置
+npx wrangler whoami
+
+# 查看部署日志
+npx wrangler tail
+```
+
+**运行时错误**
+```bash
+# 查看实时日志
+npx wrangler tail your-project-name
+```
+
+#### 🔗 相关链接
+
+- [Cloudflare Workers 文档](https://developers.cloudflare.com/workers/)
+- [Wrangler CLI 文档](https://developers.cloudflare.com/workers/wrangler/)
+- [OpenNext Cloudflare 文档](https://opennext.js.org/cloudflare)
+- [Upstash Redis 文档](https://docs.upstash.com/redis)
+
+---
+
 ### 🟢 Render 部署（免费）
 
 [Render](https://render.com/) 提供免费的 Web Service 托管，支持 Docker 部署，适合个人项目。

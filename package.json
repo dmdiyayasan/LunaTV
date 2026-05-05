@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "pnpm gen:manifest && next dev -H 0.0.0.0",
     "build": "pnpm gen:manifest && next build",
+    "build:cloudflare": "BUILD_TARGET=cloudflare pnpm gen:manifest && npx @opennextjs/cloudflare build",
     "start": "next start",
+    "preview:cloudflare": "wrangler dev",
+    "deploy:cloudflare": "wrangler deploy",
     "lint": "next lint",
     "lint:fix": "eslint src --fix && pnpm format",
     "lint:strict": "eslint --max-warnings=0 src",
@@ -78,6 +81,7 @@
     "@commitlint/config-conventional": "^16.2.4",
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.28.0",
+    "@opennextjs/cloudflare": "^1.19.6",
     "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4.1.18",
     "@tanstack/react-query-devtools": "^5.100.9",
@@ -109,7 +113,8 @@
     "prettier-plugin-tailwindcss": "^0.6.12",
     "tailwindcss": "^4.1.18",
     "typescript": "^5.8.3",
-    "webpack-obfuscator": "^3.5.1"
+    "webpack-obfuscator": "^3.5.1",
+    "wrangler": "^4.87.0"
   },
   "lint-staged": {
     "**/*.{js,jsx,ts,tsx}": [

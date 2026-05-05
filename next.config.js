@@ -1,9 +1,12 @@
 /** @type {import('next').NextConfig} */
 
+// 检测是否为 Cloudflare 构建
+const isCloudflare = process.env.CF_PAGES === '1' || process.env.BUILD_TARGET === 'cloudflare';
+
 const nextConfig = {
-  // 生产环境始终使用 standalone 模式（Vercel/Docker/Render）
-  // 本地开发时（NODE_ENV !== 'production'）不使用 standalone
-  ...(process.env.NODE_ENV === 'production' ? { output: 'standalone' } : {}),
+  // Cloudflare 不支持 standalone，使用默认输出
+  // 其他生产环境使用 standalone 模式（Vercel/Docker/Render）
+  output: isCloudflare ? undefined : (process.env.NODE_ENV === 'production' ? 'standalone' : undefined),
 
   reactStrictMode: false,
 
