@@ -10,8 +10,14 @@ const nextConfig = {
 
   reactStrictMode: false,
 
-  // Puppeteer/Chromium 相关包不进行 bundle（用于 Vercel serverless）
-  serverExternalPackages: ['@sparticuz/chromium', 'puppeteer-core'],
+  // 排除大型包不进行 bundle
+  // Cloudflare: websr 太大，排除以减小 Worker 大小
+  // Vercel: Puppeteer/Chromium 用于 serverless
+  serverExternalPackages: [
+    '@sparticuz/chromium',
+    'puppeteer-core',
+    ...(isCloudflare ? ['@websr/websr'] : []),
+  ],
 
   // Next.js 16 使用 Turbopack，配置 SVG 加载
   turbopack: {
