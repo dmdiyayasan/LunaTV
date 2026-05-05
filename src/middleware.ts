@@ -4,9 +4,6 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { getAuthInfoFromCookie } from '@/lib/auth';
 
-// 指定使用 Edge Runtime（Cloudflare Workers 需要）
-export const runtime = 'experimental-edge';
-
 // 信任网络配置缓存（从 API 获取）
 let trustedNetworkCache: { enabled: boolean; trustedIPs: string[] } | null = null;
 let trustedNetworkCacheTime = 0;
